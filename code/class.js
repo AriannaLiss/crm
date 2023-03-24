@@ -13,15 +13,27 @@ class RestorationProduct {
     }
 }
 
-function StoreProduct ({productName, porductPrice, productImage, productDescription, keywords, id, date}) {
+class VideoProduct {
+    constructor ({videoName, videoUrl, keywords, description, id, date}) {
+        this.id = id();
+        this.videoName = videoName;
+        this.videoUrl = videoUrl;
+        this.description = description;
+        this.keywords = keywords.split(",");
+        this.date = date()
+    }
+}
+
+function StoreProduct ({productName, price, productImage, productDescription, keywords, id, date}) {
     this.productName = productName;
-    this.porductPrice = porductPrice;
+    this.price = price;
     this.productImage = productImage;
     this.productDescription = productDescription;
     this.keywords = keywords.split(",");
+    this.stopList = true;
+    this.quantity = 0;
     this.id = id();
     this.date = date()
 }
 
-
-export {RestorationProduct, StoreProduct}
+export {RestorationProduct, StoreProduct, VideoProduct}

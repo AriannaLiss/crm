@@ -1,4 +1,5 @@
-import { RestorationProduct, StoreProduct } from "./class.js";
+import { RestorationProduct, StoreProduct, VideoProduct } from "./class.js";
+import { editClickEvent } from "./show-product.js";
 
 export const getLogin = () => {
     const data = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -50,13 +51,21 @@ export function showInputModal(category) {
     }else if(category === "Магазин"){
        form = `<form data-category="${category}" id="category-form">
                 ${patternCreateInputForModal("Назва продукту", undefined, generatorID(), "productName")}
-                ${patternCreateInputForModal("Вартість продукту", "number", generatorID(), "porductPrice")}
+                ${patternCreateInputForModal("Вартість продукту", "number", generatorID(), "price")}
                 ${patternCreateInputForModal("Картинка продукту", "url", generatorID(), "productImage")}
                 ${patternCreateInputForModal("Опис продукту", undefined, generatorID(), "productDescription")}
                 ${patternCreateInputForModal("Гарячі слова. Розділяти комою", undefined, generatorID(), "keywords")}
         </form>
         ` 
-    }
+    }else if(category === "Відео хостинг"){
+        form = `<form data-category="${category}" id="category-form">
+                 ${patternCreateInputForModal("Назва відео", undefined, generatorID(), "videoName")}
+                 ${patternCreateInputForModal("Посилання на відео", "url", generatorID(), "videoUrl")}
+                 ${patternCreateInputForModal("Опис відео", undefined, generatorID(), "description")}
+                 ${patternCreateInputForModal("Гарячі слова. Розділяти комою", undefined, generatorID(), "keywords")}
+         </form>
+         ` 
+     }
 
     // інтеграція готової форми на html сторінку
     body_modal
@@ -84,8 +93,6 @@ export function createEditProductInput(value = "---", placeholder, id = "") {
     div.append(label, input);
     return div
 }
-
-
 
 function generatorID() {
     const sub = "qwertyuiopasdfghjklzxcvbnm1234567890&$_";
@@ -121,15 +128,19 @@ export function addProduct(category) {
         const restorationBD = JSON.parse(localStorage.restorationBD);
         restorationBD.push(new RestorationProduct(obj));
         localStorage.restorationBD = JSON.stringify(restorationBD);
-        const alertOk = document.querySelector(".alert-ok");
-        alertOk.classList.remove("hide"); 
-        alertOk.innerHTML = "Ви успішно зберегли дані про старву!"
-        setTimeout(()=>{alertOk.classList.add("hide"); }, 2000)
     }else if(category === "Магазин"){
         const storeBD = JSON.parse(localStorage.storeBD);
         storeBD.push(new StoreProduct(obj));
         localStorage.storeBD = JSON.stringify(storeBD);
+    }else if(category === "Відео хостинг"){
+        const videoBD = JSON.parse(localStorage.videoBD);
+        videoBD.push(new VideoProduct(obj));
+        localStorage.videoBD = JSON.stringify(videoBD);
     }
+    const alertOk = document.querySelector(".alert-ok");
+    alertOk.classList.remove("hide"); 
+    alertOk.innerHTML = "Ви успішно зберегли дані про старву!"
+    setTimeout(()=>{alertOk.classList.add("hide"); }, 2000);
     document.querySelector(".container-modal").classList.add("hide")
 }
 
@@ -164,4 +175,64 @@ export function createProductElement (tagName = "div", className, value = "", at
         })
     }
     return element
+}
+
+export function fillProductTable(data){
+    let tableData;
+    if (data[0] && data[0].videoName){
+        tableData = data.map((e, i) => {
+            const { videoName, videoUrl, description, date } = e;
+            const tr = createProductElement("tr");
+            const tds = [
+                createProductElement("td", undefined, i + 1),
+                createProductElement("td", undefined, videoName),
+                createProductElement("td", undefined, date),
+                createProductElement("td", undefined, `<a href="${videoUrl}">${description}</a>`),
+                createProductElement("td", undefined, "<span class='icon'>&#128221;</span>", undefined, editClickEvent, e),
+                createProductElement("td", undefined, "<span class='icon'>&#128465;</span>")
+            ]
+            tr.append(...tds);
+            return tr
+        })
+    }else{
+        tableData = data.map((e, i) => {
+            const { productName, quantity, date, price } = e;
+            const tr = createProductElement("tr");
+            const tds = [
+                createProductElement("td", undefined, i + 1),
+                createProductElement("td", undefined, productName),
+                createProductElement("td", undefined, quantity),
+                createProductElement("td", undefined, price),
+                createProductElement("td", undefined, "<span class='icon'>&#128221;</span>", undefined, editClickEvent, e),
+                createProductElement("td", undefined, quantity > 0 ? "&#9989;" : "&#10060;"),
+                createProductElement("td", undefined, date),
+                createProductElement("td", undefined, "<span class='icon'>&#128465;</span>")
+            ]
+            tr.append(...tds);
+            return tr
+        })
+    }
+    return tableData
+}
+
+export function getData(){
+    const data = JSON.parse(localStorage[getStorageName()])
+    // Перевірка на те чи отримали ми масив
+    if (!Array.isArray(data))
+        throw new Error("Ми отримали не масив!!!");
+    return data;
+}
+
+export function getStorageName(){
+    const pagesMap = {
+        restoran: 'restorationBD',
+        store: 'storeBD',
+        video: 'videoBD'
+    }
+    const page = Object.keys(pagesMap).find( (key) =>
+    document.location.pathname.includes('/'+key)
+    )
+    if (!page)
+        throw new Error("Ми не на сторінці з таблицею!!");
+    return pagesMap[page];
 }
